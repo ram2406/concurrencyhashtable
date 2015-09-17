@@ -10,7 +10,8 @@
 #include <cds/container/striped_map/std_map.h>
 #include <cds/container/striped_map.h>
 
-
+static int test_cds();
+auto hack_cds = test_cds();
 
 namespace cc = cds::container;
 typedef cc::StripedMap < std::map<int, int>> map_type;
@@ -65,7 +66,7 @@ int old_main() {
 }
 
 static
-int main1() {
+int test_cds() {
 	
 	//std::this_thread::sleep_for(std::chrono::seconds(1)); 
 	timer::initTimer();
@@ -78,15 +79,14 @@ int main1() {
 			std::cout << "  inserted count:" << s1 << std::endl;
 		}
 		{
+			const auto& s1 = map.size();
 			gens::RemoveData2<decltype(map), size_t, std::string, gens::IterationCount>(map);
 			timer::PrintTime("StripedMap lock-free remove");
-			const auto& s2 = map.size();
+			const auto& s2 = s1 - map.size();
 			std::cout << "  removed count:" << s2 << std::endl;
 		}
 	}
 	
 	return 0;
 }
-
-auto hack1 = main1();
 #endif

@@ -3,60 +3,29 @@
 #include <map>
 #include "cht_defs.h"
 
+static int test_cpp11 ();
+auto hack_cpp11 = test_cpp11();
+
 static
-int main2 () {
+int test_cpp11 () {
 	timer::initTimer();
 
 	//std::this_thread::sleep_for(std::chrono::seconds(1)); 
 	{
 		std::unordered_map<size_t, std::string> map;
-		{
-			gens::InsertData<decltype(map), size_t, std::string, gens::IterationCount>(map);
-			timer::PrintTime("unordered_map w/o mutex insert");
-			const auto& s1 = map.size();
-			std::cout << "  inserted count:" << s1 << std::endl;
-		}
-		{
-			gens::RemoveData<decltype(map), size_t, std::string, gens::IterationCount>(map);
-			timer::PrintTime("unordered_map w/o mutex remove");
-			const auto& s2 = map.size();
-			std::cout << "  removed count:" << s2 << std::endl;
-		}
+		tests::test_cpp11_wo_mutex<decltype(map), size_t, std::string, gens::IterationCount>(map, "unordered_map w/o mutex");
 	}
 
 	{
 		std::unordered_map<size_t, std::string> map;
-		{
-			gens::InsertDataMutex<decltype(map), size_t, std::string, gens::IterationCount>(map);
-			timer::PrintTime("unordered_map with mutex");
-			const auto& s = map.size();
-			std::cout << "  inserted count:" << s << std::endl;
-		}
-		{
-			gens::RemoveData<decltype(map), size_t, std::string, gens::IterationCount>(map);
-			timer::PrintTime("unordered_map with mutex remove");
-			const auto& s = map.size();
-			std::cout << "  removed count:" << s << std::endl;
-		}
+		tests::test_cpp11_wo_mutex<decltype(map), size_t, std::string, gens::IterationCount>(map, "unordered_map with mutex");
 	}
 
 	{
 		std::map<size_t, std::string> map;
-		{
-			gens::InsertData<decltype(map), size_t, std::string, gens::IterationCount>(map);
-			timer::PrintTime("simple std::map");
-			const auto& s = map.size();
-			std::cout << "  inserted count:" << s << std::endl;
-		}
-		{
-			gens::RemoveData<decltype(map), size_t, std::string, gens::IterationCount>(map);
-			timer::PrintTime("simple std::map remove");
-			const auto& s = map.size();
-			std::cout << "  removed count:" << s << std::endl;
-		}
+		tests::test_cpp11_wo_mutex<decltype(map), size_t, std::string, gens::IterationCount>(map, "simple std::map");
 	}
 	
 	return 0;
 }
 
-auto hack2 = main2();

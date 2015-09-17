@@ -57,6 +57,15 @@ namespace gens {
 	}
 
 	template <class Map, class Key, class Value, std::size_t N>
+	void RemoveDataMutex(Map& map) {
+		static std::mutex mx;
+		for (std::size_t iter = 0; iter < N; ++iter) {
+			std::unique_lock<std::mutex> lk(mx);
+			map.erase(GenerateKey<Key>());
+		}
+	}
+
+	template <class Map, class Key, class Value, std::size_t N>
 	void InsertData2(Map& map) {
 		for (std::size_t iter = 0; iter < N; ++iter) {
 			map.insert(GenerateKey<Key>(), GenerateValue<Value>());
@@ -99,4 +108,40 @@ namespace timer {
 		TimePoint = timePoint2;
 		std::cout << text  << ", time: " << res * (0.000000001) << std::endl;
 	}
+}
+
+namespace tests {
+	
+	template <class Map, class Key, class Value, size_t IterCount>
+	void test_cpp11_wo_mutex (Map& map, const std::string& text) {
+		{
+			gens::InsertData<Map, Key, Value, IterCount>(map);
+			timer::PrintTime(text + " insert");
+			const auto& s1 = map.size();
+			std::cout << "  inserted count:" << s1 << std::endl;
+		}
+		{
+			gens::RemoveData<Map, Key,  Value, IterCount>(map);
+			timer::PrintTime(text + " remove");
+			const auto& s2 = map.size();
+			std::cout << "  removed count:" << s2 << std::endl;
+		}
+	}
+
+	template <class Map, class Key, class Value, size_t IterCount>
+	void test_cpp11_with_mutex (Map& map, const std::string& text) {
+		{
+			gens::InsertDataMutex<Map, Key, Value, IterCount>(map);
+			timer::PrintTime(text + " insert");
+			const auto& s1 = map.size();
+			std::cout << "  inserted count:" << s1 << std::endl;
+		}
+		{
+			gens::RemoveDataMutex<Map, Key,  Value, IterCount>(map);
+			timer::PrintTime(text + " remove");
+			const auto& s2 = map.size();
+			std::cout << "  removed count:" << s2 << std::endl;
+		}
+	}
+
 }

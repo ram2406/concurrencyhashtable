@@ -112,8 +112,11 @@ namespace timer {
 
 namespace tests {
 	
-	template <class Map, class Key, class Value, size_t IterCount>
-	void test_cpp11_wo_mutex (Map& map, const std::string& text) {
+	template < class Map, size_t IterCount>
+	void test_cpp11_wo_mutex (const std::string& text) {
+		typedef typename Map::key_type Key;
+		typedef typename Map::value_type::second_type Value;
+		Map map;
 		{
 			gens::InsertData<Map, Key, Value, IterCount>(map);
 			timer::PrintTime(text + " insert");
@@ -128,8 +131,11 @@ namespace tests {
 		}
 	}
 
-	template <class Map, class Key, class Value, size_t IterCount>
-	void test_cpp11_with_mutex (Map& map, const std::string& text) {
+	template <class Map, size_t IterCount>
+	void test_cpp11_with_mutex (const std::string& text) {
+		typedef typename Map::key_type Key;
+		typedef typename Map::value_type::second_type Value;
+		Map map;
 		{
 			gens::InsertDataMutex<Map, Key, Value, IterCount>(map);
 			timer::PrintTime(text + " insert");

@@ -24,7 +24,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v110</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -72,9 +72,11 @@
     </ClCompile>
     <ClCompile Include="cpp11.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="hash_table.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cht_defs.h" />
+    <ClInclude Include="hash_table.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

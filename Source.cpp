@@ -69,13 +69,18 @@ int main1() {
 	timer::initTimer();
 	{
 		map_type2 map;
-		
-		gens::InsertData2<decltype(map), size_t, std::string, gens::IterationCount>(map);
-		const auto& s1 = map.size();
-		timer::PrintTime("StripedMap lock-free insert");
-		gens::RemoveData2<decltype(map), size_t, std::string, gens::IterationCount>(map);
-		const auto& s2 = map.size();
-		timer::PrintTime("StripedMap lock-free remove");
+		{
+			gens::InsertData2<decltype(map), size_t, std::string, gens::IterationCount>(map);
+			timer::PrintTime("StripedMap lock-free insert");
+			const auto& s1 = map.size();
+			std::cout << "  inserted count:" << s1 << std::endl;
+		}
+		{
+			gens::RemoveData2<decltype(map), size_t, std::string, gens::IterationCount>(map);
+			timer::PrintTime("StripedMap lock-free remove");
+			const auto& s2 = map.size();
+			std::cout << "  removed count:" << s2 << std::endl;
+		}
 	}
 	
 	return 0;

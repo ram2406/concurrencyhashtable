@@ -1,3 +1,16 @@
+/*
+Concurrency Hash Table
+
+* HashEntry - struct contains key/value and simple linked list
+* HashTable - class implement an associative array, a structure that can map keys to values (HashEntry). Collisions is not trouble.
+* ConcurrencyHashTable - based on HashTable with thread-safe
+
+* HashMap<Key, Value, Sync> - easy interface for use
+** Key - type of keys
+** Value - type of values
+** Sync - synchronize flag. If true - ConcurrencyHashTable be used, false - HashTable.
+*/
+
 #include <list>
 #include <vector>
 #include <memory>
@@ -6,7 +19,7 @@
 
 
 template <class Key, class Value>
-class HashEntry {
+struct HashEntry {
 
 private:
 	Key key;
@@ -31,7 +44,7 @@ public:
 	typedef Value second_type;
 	typedef std::unique_ptr<HashEntry<Key, Value>> HashEntryPtr;
 
-	HashEntryPtr next;
+	HashEntryPtr next;		//linked list
 
 	bool insert(const Key& key, const Value& value) {
 		if(this->getKey() == key) {
@@ -45,6 +58,8 @@ public:
 		return next->insert(key, value);
 	}
 
+	// top function for call recursive insert
+	// return true if element inserted, or false if changed
 	static bool insert(HashEntryPtr& entry, const Key& key, const Value& value) {
 		if(entry->getKey() == key) {
 			entry->getValue() = value;
@@ -68,6 +83,8 @@ public:
 		next->erase(key);
 	}
 
+	// top function for call recursive erase
+	// return true if element finded by key and removed
 	static bool erase(HashEntryPtr& entry, const Key& key) {
 		if(entry->getKey() == key) {
 			entry = std::move(entry->next);
@@ -75,12 +92,15 @@ public:
 		}
 		return entry->erase(key);
 	}
+	//calc elements count of linked list
 	size_t size() const {
 		if(!next) {
 			return 0;
 		}
 		return 1 + next->size();
 	}
+
+	// top function for call recursive get
 	static Value& get(HashEntryPtr& entry, const Key& key) {
 		if(entry->getKey() == key) {
 			return entry->getValue();
@@ -181,6 +201,7 @@ public:
 #include <atomic>
 #include <mutex>
 
+//TODO: shared_mutex, spinlock_mutex
 template <class Key, class Value, class Mutex = std::mutex>
 class ConcurrencyHashTable
 	: private HashTable<Key, Value, std::atomic_size_t> {

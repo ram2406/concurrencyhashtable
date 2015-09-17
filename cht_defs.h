@@ -5,6 +5,11 @@
 #include <thread>
 #include <mutex>
 
+#if _MSC_VER > 1800
+#define CDS_COMPILER_SUPPORT 1
+#else
+//#define CDS_COMPILER_SUPPORT 0
+#endif
 
 namespace gens {
 	const size_t IterationCount = 1000U;

@@ -1,4 +1,6 @@
+#include "cht_defs.h"
 
+#if defined(CDS_COMPILER_SUPPORT)
 #include <map>
 #include <sstream>
 
@@ -8,7 +10,7 @@
 #include <cds/container/striped_map/std_map.h>
 #include <cds/container/striped_map.h>
 
-#include "Header.h"
+
 
 namespace cc = cds::container;
 typedef cc::StripedMap < std::map<int, int>> map_type;
@@ -82,3 +84,4 @@ int main1() {
 }
 
 auto hack1 = main1();
+#endif

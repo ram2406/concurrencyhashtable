@@ -221,12 +221,12 @@ public:
 		size_t size() const { return base::size(); }
 };
 
-template <class Key, class Value, bool Sync = true>
+template <class Key, class Value, bool Sync = false>
 class HashMap {
 };
 
 template <class Key, class Value>
-class HashMap<Key,Value, false> 
+class HashMap<Key,Value, true> 
 	: public ConcurrencyHashTable<Key, Value>  {
 	typedef ConcurrencyHashTable<Key, Value> base;
 public:
@@ -245,7 +245,7 @@ public:
 
 
 template <class Key, class Value>
-class HashMap<Key,Value, true> 
+class HashMap<Key,Value, false> 
 	: public HashTable<Key, Value>  {
 	typedef HashTable<Key, Value> base;
 public:

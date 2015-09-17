@@ -7,7 +7,7 @@ auto hack_hash_table = test_hash_table();
 
 typedef HashMap<size_t, std::string> hash_table;
 
-typedef HashMap<size_t, std::string, false> hash_table_thread_safe;
+typedef HashMap<size_t, std::string, true> hash_table_thread_safe;
 
 static 
 int test_hash_table() {

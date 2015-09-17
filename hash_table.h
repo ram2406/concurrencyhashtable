@@ -3,7 +3,7 @@
 #include <memory>
 #include <functional>
 #include <map>
-#include <atomic>
+
 
 template <class Key, class Value>
 class HashEntry {
@@ -101,8 +101,8 @@ public:
 
 };
 
-template<class Key, class Value>
-class HashMap {
+template<class Key, class Value, class SizeType = size_t>
+class HashTable {
 public:
 	typedef HashEntry<Key, Value> hash_entry;
 	typedef std::hash<Key> hash_type;
@@ -110,28 +110,25 @@ public:
 	typedef hash_entry value_type;
 private:
 	std::vector<std::unique_ptr<HashEntry<Key, Value>>> table;
-	size_t length;
-	std::atomic_size_t current_size;
-	hash_type h;
-	size_t find(const Key& key) const {
-		size_t hash = (h(key) % (length ));
-		while (table[hash] != nullptr && table[hash]->getKey() != key)
-			hash = ((hash + 1) % (length ));
-		return hash;
+	const size_t length;
+	SizeType current_size;
+	const hash_type h;
+	size_t calc_hash(const Key& key) const {
+		return (h(key) % (length));
 	}
 	static const size_t DefaultCapacity = 1000;
 public:
-	HashMap()
+	HashTable()
 		: table(DefaultCapacity), length(DefaultCapacity), current_size(0) {
 
 	}
-	HashMap(size_t capacity)
+	HashTable(size_t capacity)
 		: table(capacity), length(capacity), current_size(0) {
 
 	}
 
 	Value& get(const Key& key)  {
-		const auto& hash = find(key);
+		const auto& hash = calc_hash(key);
 		if (auto& entry = table[hash]) {
 			const auto& before_size = entry->size();
 			auto& value = hash_entry::get(entry, key);
@@ -146,7 +143,7 @@ public:
 	}
 
 	bool insert(const Key& key, const Value& value) {
-		const auto& hash = find(key);
+		const auto& hash = calc_hash(key);
 		auto& entry = table[hash];
 		if(entry) {
 			const auto& inserted = hash_entry::insert(entry, key, value);
@@ -157,6 +154,7 @@ public:
 		}
 		else {
 			entry.reset(new hash_entry(key, value));
+			++current_size;
 			return true;
 		}
 
@@ -164,10 +162,10 @@ public:
 
 
 	Value& operator[] (const Key& key) { return get(key); }
-	const Value& operator[] (const Key& key) const { return get(key); }
+	//const Value& operator[] (const Key& key) const { return get(key); }
 
 	bool erase(const Key& key) {
-		const auto& hash = find(key);
+		const auto& hash = calc_hash(key);
 		if (auto& entry = table[hash]) {
 			const auto& removed = hash_entry::erase(entry, key);
 			if( removed ) {
@@ -178,4 +176,87 @@ public:
 		return false;
 	}
 	size_t size() const { return current_size; }
+};
+
+#include <atomic>
+#include <mutex>
+
+template <class Key, class Value, class Mutex = std::mutex>
+class ConcurrencyHashTable
+	: private HashTable<Key, Value, std::atomic_size_t> {
+	typedef HashTable<Key, Value, std::atomic_size_t> base;
+private:
+	std::mutex mx;
+public:
+	typedef HashEntry<Key, Value> hash_entry;
+	typedef Key key_type;
+	typedef hash_entry value_type;
+
+		ConcurrencyHashTable() {
+		}
+		ConcurrencyHashTable(size_t capacity)
+			: base(capacity) {
+
+		}
+
+		Value& get(const Key& key)  {
+			std::lock_guard<Mutex> lk(mx);
+			return base::get(key);
+		}
+
+		bool insert(const Key& key, const Value& value) {
+			std::lock_guard<Mutex> lk(mx);
+			return base::insert(key, value);
+		}     
+
+		bool erase(const Key& key) {
+			std::lock_guard<Mutex> lk(mx);
+			return base::erase(key);
+		}
+
+		Value& operator[] (const Key& key) { return ConcurrencyHashTable::get(key); }
+		//const Value& operator[] (const Key& key) const { return get(key); }
+
+
+		size_t size() const { return base::size(); }
+};
+
+template <class Key, class Value, bool Sync = true>
+class HashMap {
+};
+
+template <class Key, class Value>
+class HashMap<Key,Value, false> 
+	: public ConcurrencyHashTable<Key, Value>  {
+	typedef ConcurrencyHashTable<Key, Value> base;
+public:
+	typedef HashEntry<Key, Value> hash_entry;
+	typedef Key key_type;
+	typedef hash_entry value_type;
+
+		HashMap() {
+		}
+		HashMap(size_t capacity)
+			: base(capacity) {
+
+		}
+};
+
+
+
+template <class Key, class Value>
+class HashMap<Key,Value, true> 
+	: public HashTable<Key, Value>  {
+	typedef HashTable<Key, Value> base;
+public:
+	typedef HashEntry<Key, Value> hash_entry;
+	typedef Key key_type;
+	typedef hash_entry value_type;
+
+		HashMap() {
+		}
+		HashMap(size_t capacity)
+			: base(capacity) {
+
+		}
 };

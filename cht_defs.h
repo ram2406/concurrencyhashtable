@@ -6,7 +6,7 @@
 #include <thread>
 #include <mutex>
 
-#if _MSC_VER > 1800
+#if _MSC_VER >= 1800
 #define CDS_COMPILER_SUPPORT 1
 #else
 //#define CDS_COMPILER_SUPPORT 0

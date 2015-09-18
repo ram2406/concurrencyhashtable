@@ -1,6 +1,7 @@
 #pragma once
 #include <mutex>
 #include <memory>
+#include <atomic>
 #include <condition_variable>
 
 template<typename T>
@@ -21,6 +22,7 @@ private:
 	std::mutex head_mutex;
 	std::unique_ptr<node> head;
 	std::mutex tail_mutex;
+	std::atomic<bool> reset_cond_wait;
 	node* tail;
 	std::condition_variable data_cond;
 
@@ -33,6 +35,9 @@ private:
 	std::unique_ptr<node> pop_head()
 	{
 		std::unique_ptr<node> old_head = std::move(head);
+		if (!old_head) {
+			return std::unique_ptr<node>();
+		}
 		head = std::move(old_head->next);
 		return old_head;
 	}
@@ -40,7 +45,12 @@ private:
 	std::unique_lock<std::mutex> wait_for_data()
 	{
 		std::unique_lock<std::mutex> head_lock(head_mutex);
-		data_cond.wait(head_lock, [&]{return head.get() != get_tail(); });
+		data_cond.wait(head_lock, [&]{
+			if (reset_cond_wait) {
+				return true;
+			}
+			return head.get() != get_tail(); 
+		});
 		return std::move(head_lock);
 	}
 
@@ -59,22 +69,26 @@ private:
 
 public:
 	threadsafe_queue() :
-		head(new node), tail(head.get())
+		head(new node), tail(head.get()), reset_cond_wait(false)
 	{}
 	threadsafe_queue(const threadsafe_queue& other) = delete;
 	threadsafe_queue& operator=(const threadsafe_queue& other) = delete;
-
+	void reset_cond() { reset_cond_wait = true; data_cond.notify_all(); }
+	~threadsafe_queue() { 
+		//reset_cond();
+	}
 
 	std::shared_ptr<T> wait_and_pop()
 	{
 		std::unique_ptr<node> const old_head = wait_pop_head();
+		if (!old_head) return std::shared_ptr<T>();
 		return old_head->data;
 	}
 
-	void wait_and_pop(T& value)
-	{
-		std::unique_ptr<node> const old_head = wait_pop_head(value);
-	}
+	//void wait_and_pop(T& value)
+	//{
+	//	std::unique_ptr<node> const old_head = wait_pop_head(value);
+	//}
 
 	std::shared_ptr<T> try_pop()
 	{

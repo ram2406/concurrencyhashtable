@@ -1,4 +1,5 @@
 #include "cht_defs.h"
+#include "thread_pool.h"
 
 namespace timer {
 	std::chrono::system_clock::time_point& getLastTime() {
@@ -12,5 +13,7 @@ int main() {
 	
 	system("pause");
 	timer::PrintTime("finish");
+	thread_pool().destroy_threads();
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 	return 0; 
 }

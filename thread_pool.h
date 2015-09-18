@@ -7,15 +7,16 @@
 #include <iostream>
 #include "thread_safe_queue.h"
 
-//typedef int thread_pool_task;
-//typedef std::function<void()> thread_pool_task;
-inline class ThreadPool& thread_pool();
-typedef std::packaged_task<void()> thread_pool_task;
+template<class RetValue>
 class ThreadPool {
+public:
+	typedef std::packaged_task<RetValue()> thread_pool_task;
+private:
 	friend class WaitThreads;
 	std::atomic<bool> working_flag;
 	std::vector<std::thread> threads;
 	threadsafe_queue<thread_pool_task> tasks;
+
 
 	ThreadPool()
 		: working_flag(true)
@@ -55,4 +56,5 @@ public:
 	}
 };
 
-inline ThreadPool& thread_pool() { return ThreadPool::instance(); }
+typedef ThreadPool<void> SimpleThreadPool;
+inline SimpleThreadPool& thread_pool() { return SimpleThreadPool::instance(); }

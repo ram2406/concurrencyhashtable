@@ -1,12 +1,13 @@
 #include "thread_pool.h"
 
-ThreadPool& ThreadPool::instance() {
-	static ThreadPool th_pool;
+template<>
+SimpleThreadPool& SimpleThreadPool::instance() {
+	static SimpleThreadPool th_pool;
 	return th_pool;
 }
 
 
-void ThreadPool::thread_loop() {
+void SimpleThreadPool::thread_loop() {
 	auto& thp = thread_pool();
 	while (true) {
 		auto task = thp.tasks.wait_and_pop();

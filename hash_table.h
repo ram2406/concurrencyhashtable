@@ -126,11 +126,14 @@ template<class HTable>
 class HashTableIterator : public std::iterator<std::output_iterator_tag, typename HTable::hash_entry>
 {
 	typedef typename HTable::hash_entry HEntry;
+	typedef typename HTable::key_type Key;
 	HTable& table;
-	HEntry* entry;
+	Key key;
+	bool has_value;
 public:
-	HashTableIterator(HTable& table, HEntry* entry) : table(table), entry(entry) {}
-  HashTableIterator(const HashTableIterator& it) : table(it.table), entry(it.entry) {}
+	HashTableIterator(HTable& table, const Key &key) : table(table), key(key), has_value(true) {}
+	HashTableIterator(HTable& table) : table(table), has_value(false) {}
+  HashTableIterator(const HashTableIterator& it) : table(it.table), key(it.key), has_value(true) {}
 
   HashTableIterator& operator--();
   HashTableIterator operator--(int);
@@ -140,7 +143,7 @@ public:
 
   HEntry& operator*();
 
-  bool operator==(const HashTableIterator& rhs) { return &table == &rhs.table && entry == rhs.entry; }
+  bool operator==(const HashTableIterator& rhs) { return has_value == rhs.has_value && &table == &rhs.table && (!has_value || key == rhs.key); }
   bool operator!=(const HashTableIterator& rhs) { return !this->operator==(rhs); }
 
   
@@ -168,6 +171,26 @@ protected:
 	size_t calc_hash(const Key& key) const {
 		return (h(key) % (length-1));
 	}
+	hash_entry_ptr& entry_of(const Key& key) {
+		return table[calc_hash(key)];
+	}
+
+	hash_entry* after (size_t h) {
+		for(auto hi = h+1; hi < length; ++hi) {
+			if(auto& e = table[hi]) {
+				return e.get();
+			}
+		}
+		return nullptr;
+	}
+	hash_entry* next(const Key& key) {
+		return next(table[calc_hash(key)].get());
+	}
+
+	hash_entry* previos(const Key& key) {
+		return previos(table[calc_hash(key)].get());
+	}
+
 public:
 	HashTable()
 		: table(DefaultCapacity), length(DefaultCapacity), current_size(0) {
@@ -179,8 +202,7 @@ public:
 	}
 
 	Value& get(const Key& key)  {
-		const auto& hash = calc_hash(key);
-		if (auto& entry = table[hash]) {
+		if (auto& entry = entry_of(key)) {
 			const auto& before_size = entry->size();
 			auto& value = hash_entry::get(entry, key, visitor);
 			current_size += entry->size() - before_size;
@@ -194,8 +216,7 @@ public:
 	}
 
 	bool insert(const Key& key, const Value& value) {
-		const auto& hash = calc_hash(key);
-		auto& entry = table[hash];
+		auto& entry = entry_of(key);
 		if(entry) {
 			const auto& inserted = hash_entry::insert(entry, key, value, visitor);
 			if(inserted) {
@@ -215,9 +236,8 @@ public:
 	Value& operator[] (const Key& key) { return get(key); }
 	//const Value& operator[] (const Key& key) const { return get(key); }
 
-	bool erase(const Key& key) {
-		const auto& hash = calc_hash(key);
-		if (auto& entry = table[hash]) {
+	bool erase(const Key& key) {		
+		if (auto& entry = entry_of(key)) {
 			const auto& removed = hash_entry::erase(entry, key, visitor);
 			if( removed ) {
 				--current_size;
@@ -230,11 +250,16 @@ public:
 
 
 
-	HashTableIterator<HashTable> begin() { return HashTableIterator<HashTable>(*this, after(0)); }
-	HashTableIterator<HashTable> end() { return HashTableIterator<HashTable>(*this,  nullptr); }
+	HashTableIterator<HashTable> begin() { 
+		auto ep = after(0); 
+		return ep 
+			? HashTableIterator<HashTable>(*this, ep->getKey())
+			: end();
+	}
+	HashTableIterator<HashTable> end() { return HashTableIterator<HashTable>(*this); }
 
 private:
-		hash_entry_ptr& find(size_t h, size_t level) {
+	hash_entry_ptr& find(size_t h, size_t level) {
 		for(auto hi = h; hi < length; ++hi) {
 			if(auto& entry = table[hi]) {
 				if(!entry.getNext()) { return entry; }
@@ -248,15 +273,6 @@ private:
 		return empty;
 	}
 
-	hash_entry* after (size_t h) {
-		for(auto hi = h+1; hi < length; ++hi) {
-			if(auto& e = table[hi]) {
-				return e.get();
-			}
-		}
-		return nullptr;
-	}
-
 	hash_entry* next(hash_entry* entry) {
 		if(!entry) {
 			return nullptr;
@@ -268,7 +284,7 @@ private:
 		return after(h);
 	}
 
-	hash_entry_ptr& previos(hash_entry_ptr& entry) {
+	hash_entry* previos(hash_entry* entry) {
 		if(!entry) {
 			return nullptr;
 		}
@@ -317,36 +333,61 @@ private:
 
 template<class HTable>
 HashTableIterator<HTable>& HashTableIterator<HTable>::operator--() {
-	entry = table.previus(entry);
+	if(!has_value) {
+		throw std::runtime_error("invalid iterator");
+	}
+	auto entry = table.previus(key);
+	if(!entry) {
+		has_value = false;
+	}
+	else {
+		key = entry->getKey();
+	}
 	return *this;
 }
 
 template<class HTable>
 HashTableIterator<HTable> HashTableIterator<HTable>::operator--(int) {
+	if(!has_value) {
+		throw std::runtime_error("invalid iterator");
+	}
 	auto tmp = HashTableIterator<HTable>(table, entry);
-	entry = table.previus(entry);
+	operator--();
 	return tmp;
 }
 
 template<class HTable>
 HashTableIterator<HTable>& HashTableIterator<HTable>::operator++() {
-	entry = table.next(entry);
+	if(!has_value) {
+		throw std::runtime_error("invalid iterator");
+	}
+	auto entry = table.next(key);
+	if(!entry) {
+		has_value = false;
+	}
+	else {
+		key = entry->getKey();
+	}
 	return *this;
 }
 
 template<class HTable>
 HashTableIterator<HTable> HashTableIterator<HTable>::operator++(int) {
-	auto tmp = HashTableIterator<HTable>(table, entry);
-	entry = table.next(entry);
+	if(!has_value) {
+		throw std::runtime_error("invalid iterator");
+	}
+	auto tmp = HashTableIterator<HTable>(table, key);
+	operator++();
 	return tmp;
 }
 
 template<class HTable>
 typename HashTableIterator<HTable>::HEntry& HashTableIterator<HTable>::operator* () {
-	if(!entry) {
-		throw std::runtime_error("entry is empty");
+	typedef typename HashTableIterator<HTable>::HEntry hentry;
+	if(!has_value) {
+		throw std::runtime_error("invalid iterator");
 	}
-	return *entry;
+	return *table.entry_of(key);
 }
 
 #include <atomic>
@@ -378,7 +419,6 @@ struct LockVisitor {
 	}
 };
 
-//TODO: shared_mutex, spinlock_mutex
 template <class Key, class Value, class Mutex = std::mutex, class Visitor = LockVisitor<Key,Value,Mutex>>
 class ConcurrencyHashTable
 	: private HashTable<Key, Value, Visitor, std::atomic_size_t> {
@@ -387,6 +427,9 @@ public:
 	typedef typename base::hash_entry hash_entry;
 	typedef Key key_type;
 	typedef hash_entry value_type;
+	typedef typename Visitor::lock lock_type;
+	typedef Mutex mutex_type;
+	friend class HashTableIterator<ConcurrencyHashTable>;
 public:
 		ConcurrencyHashTable() {
 		}
@@ -395,7 +438,7 @@ public:
 
 		}
 
-		Value& get(const Key& key)  {
+		Value get(const Key& key)  {
 			auto lock = visitor.read_lock();
 			return base::get(key);
 		}
@@ -410,14 +453,32 @@ public:
 			return base::erase(key);
 		}
 
-		Value& operator[] (const Key& key) { return ConcurrencyHashTable::get(key); }
+		Value operator[] (const Key& key) { return ConcurrencyHashTable::get(key); }
 		//const Value& operator[] (const Key& key) const { return get(key); }
 
 
 		size_t size() const { return base::size(); }
 
-		friend typename hash_entry;
-	
+		HashTableIterator<ConcurrencyHashTable> begin() { 
+			auto lock = visitor.read_lock();
+			auto ep = base::after(0);
+			return ep 
+				? HashTableIterator<ConcurrencyHashTable>(*this, ep->getKey())
+				: end();
+		}
+		HashTableIterator<ConcurrencyHashTable> end() { return HashTableIterator<ConcurrencyHashTable>(*this); }
+
+private:
+	hash_entry* next(const Key& key) {
+		auto lock = visitor.read_lock();
+		return base::next(key);
+	}
+
+	hash_entry* previos(const Key& key) {
+		auto lock = visitor.read_lock();
+		return base::previos(key);
+	}
+
 };
 
 template <class Key, class Value, bool Sync = false>

@@ -37,7 +37,10 @@ int test_hash_table() {
 	for(auto& entry : map) {
 		std::cout << entry.getKey() << " " << entry.getValue() << std::endl;
 	}
-
+	
+	hash_table_thread_safe m1;
+	m1.insert(123, "123");
+	auto x = m1.begin()++;
 	//benchmark
 	timer::initTimer();
 

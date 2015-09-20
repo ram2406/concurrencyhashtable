@@ -7,6 +7,7 @@ template<class Key, class Value>
 struct LockVisitor<Key, Value, sm::shared_mutex> {
 	typedef sm::shared_mutex Mutex;
 	
+
 	struct lock_read {
 		Mutex &mx;
 		lock_read(Mutex& mx) : mx(mx) {
@@ -18,6 +19,8 @@ struct LockVisitor<Key, Value, sm::shared_mutex> {
 			mx.unlock_shared();
 		}
 	};
+
+	typedef lock_read lock;
 
 	Mutex mx;
 	typedef HashEntry<Key, Value, LockVisitor> hash_entry;

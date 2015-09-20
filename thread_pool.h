@@ -27,7 +27,7 @@ private:
 		}
 	}
 
-	ThreadPool& operator=(const ThreadPool&) = delete;
+	ThreadPool& operator=(const ThreadPool&) {} // = delete
 	
 public:
 	~ThreadPool() { 

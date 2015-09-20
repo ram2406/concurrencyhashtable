@@ -67,12 +67,14 @@ private:
 		return pop_head();
 	}
 
+	threadsafe_queue(const threadsafe_queue& other) {} //=delete
+	threadsafe_queue& operator=(const threadsafe_queue& other) {} // = delete;
+
 public:
 	threadsafe_queue() :
 		head(new node), tail(head.get()), reset_cond_wait(false)
 	{}
-	threadsafe_queue(const threadsafe_queue& other) = delete;
-	threadsafe_queue& operator=(const threadsafe_queue& other) = delete;
+	
 	void reset_cond() { reset_cond_wait = true; data_cond.notify_all(); }
 	~threadsafe_queue() { 
 		//reset_cond();

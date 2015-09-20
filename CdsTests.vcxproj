@@ -73,10 +73,16 @@
     <ClCompile Include="cpp11.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="hash_table.cpp" />
+    <ClCompile Include="shared_mutex.cpp" />
+    <ClCompile Include="thread_pool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cht_defs.h" />
     <ClInclude Include="hash_table.h" />
+    <ClInclude Include="shared_mutex.h" />
+    <ClInclude Include="shared_mutex_win32.h" />
+    <ClInclude Include="thread_pool.h" />
+    <ClInclude Include="thread_safe_queue.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -34,6 +34,10 @@ int test_hash_table() {
 	auto test2 = map[1];
 	assert(test2.empty() && "default value test failed");
 
+	for(auto& entry : map) {
+		std::cout << entry.getKey() << " " << entry.getValue() << std::endl;
+	}
+
 	//benchmark
 	timer::initTimer();
 

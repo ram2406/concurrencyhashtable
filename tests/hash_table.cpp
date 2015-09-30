@@ -1,4 +1,4 @@
-#include "hash_table.h"
+#include "hash_table/hash_map.h"
 #include "cht_defs.h"
 #include "thread_pool.h"
 
@@ -8,7 +8,7 @@
 
 static int behaviour_concurrency_test();
 static int test_hash_table();
-auto hack_hash_table = test_hash_table() + behaviour_concurrency_test();	//for run test
+//auto hack_hash_table = test_hash_table() + behaviour_concurrency_test();	//for run test
 
 typedef HashMap<size_t, std::string> hash_table;
 

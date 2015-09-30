@@ -28,7 +28,7 @@ static void test_compile() {
 }
 
 static int test_thread_pool();
-auto hack_test_thread_pool = test_thread_pool();
+//auto hack_test_thread_pool = test_thread_pool();
 
 static int test_thread_pool() {
 	auto task = []() { std::this_thread::sleep_for(std::chrono::microseconds(1)); };

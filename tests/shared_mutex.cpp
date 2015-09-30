@@ -1,5 +1,5 @@
 #include "shared_mutex.h"
-#include "hash_table.h"
+#include "hash_table/hash_map.h"
 
 typedef ConcurrencyHashTable<size_t, std::string, sm::shared_mutex> hash_table_thread_safe;
 
@@ -58,6 +58,7 @@ int test_shared_mutex () {
 	map[3] = "dsadad3";
 	auto s = map[2];
 	return 0;
+	
 };
 
-static auto hack = test_shared_mutex();
+//static auto hack = test_shared_mutex();

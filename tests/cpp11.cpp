@@ -4,7 +4,7 @@
 #include "cht_defs.h"
 
 static int test_cpp11 ();
-auto hack_cpp11 = test_cpp11();
+//auto hack_cpp11 = test_cpp11();
 
 typedef std::unordered_map<size_t, std::string> hash_table;
 typedef std::map<size_t, std::string> map;

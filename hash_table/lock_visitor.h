@@ -8,19 +8,19 @@ struct LockVisitor {
 	Mutex mx;
 	typedef HashEntry<Key, Value, LockVisitor> hash_entry;
 	template<class EntryPtr>
-	void entry_reset (EntryPtr& entry, const Key& key, const Value& value) {
+	void entry_reset_value (EntryPtr& entry, const Key& key, const Value& value, size_t hash) {
 		entry.reset(new hash_entry(key, value));
 	}
 	template<class EntryPtr>
-	void entry_reset (EntryPtr& entry, const Key& key) {
+	void entry_reset(EntryPtr& entry, const Key& key, size_t hash) {
 		entry.reset(new hash_entry(key, Value()));
 	}
 	template<class EntryPtr>
-	void entry_set (EntryPtr& entry, const Value& value) {
+	void entry_set(EntryPtr& entry, const Value& value, size_t hash) {
 		entry->getValue() = value;
 	}
 	template<class EntryPtr>
-	void entry_move (EntryPtr& entry) {
+	void entry_move(EntryPtr& entry, size_t hash) {
 		entry = std::move(entry->getNext());
 	}
 	lock read_lock() {

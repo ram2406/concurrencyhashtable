@@ -55,5 +55,6 @@ typename HashTableIterator<HTable>::HEntry& HashTableIterator<HTable>::operator*
 	if(!has_value) {
 		throw std::runtime_error("invalid iterator");
 	}
+	
 	return *table.entry_of(key);
 }

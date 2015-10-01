@@ -53,30 +53,32 @@ public:
 	}
 
 	Value& get(const Key& key)  {
-		if (auto& entry = entry_of(key)) {
+		auto hash = calc_hash(key);
+		if (auto& entry = table[hash]) {
 			const auto& before_size = entry->size();
-			auto& value = hash_entry::get(entry, key, visitor);
+			auto& value = hash_entry::get(entry, key, hash, visitor);
 			current_size += entry->size() - before_size;
 			return value;
 		}
 		else {
-			visitor.entry_reset(entry, key);
+			visitor.entry_reset(entry, key, hash);
 			++current_size;
 			return entry->getValue();
 		}
 	}
 
 	bool insert(const Key& key, const Value& value) {
-		auto& entry = entry_of(key);
+		auto hash = calc_hash(key);
+		auto& entry = table[hash];
 		if(entry) {
-			const auto& inserted = hash_entry::insert(entry, key, value, visitor);
+			const auto& inserted = hash_entry::insert(entry, key, value, hash, visitor);
 			if(inserted) {
 				++current_size;
 			}
 			return inserted;
 		}
 		else {
-			visitor.entry_reset(entry, key, value);
+			visitor.entry_reset_value(entry, key, value, hash);
 			++current_size;
 			return true;
 		}
@@ -87,9 +89,10 @@ public:
 	Value& operator[] (const Key& key) { return get(key); }
 	//const Value& operator[] (const Key& key) const { return get(key); }
 
-	bool erase(const Key& key) {		
-		if (auto& entry = entry_of(key)) {
-			const auto& removed = hash_entry::erase(entry, key, visitor);
+	bool erase(const Key& key) {
+		auto hash = calc_hash(key);
+		if (auto& entry = table[hash]) {
+			const auto& removed = hash_entry::erase(entry, key, hash, visitor);
 			if( removed ) {
 				--current_size;
 			}

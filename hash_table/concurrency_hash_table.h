@@ -19,18 +19,21 @@ public:
 		}
 
 		Value get(const Key& key)  {
-			auto lock = visitor.read_lock();
-			return base::get(key);
+			auto hash = calc_hash(key);
+			auto lock = visitor.read_lock(hash);
+			return base::get(key, hash);
 		}
 
 		bool insert(const Key& key, const Value& value) {
-			auto lock = visitor.read_lock();
-			return base::insert(key, value);
+			auto hash = calc_hash(key);
+			auto lock = visitor.read_lock(hash);
+			return base::insert(key, value, hash);
 		}     
 
 		bool erase(const Key& key) {
-			auto lock = visitor.read_lock();
-			return base::erase(key);
+			auto hash = calc_hash(key);
+			auto lock = visitor.read_lock(hash);
+			return base::erase(key, hash);
 		}
 
 		Value operator[] (const Key& key) { return ConcurrencyHashTable::get(key); }
@@ -40,8 +43,8 @@ public:
 		size_t size() const { return base::size(); }
 
 		HashTableIterator<ConcurrencyHashTable> begin() { 
-			auto lock = visitor.read_lock();
-			auto ep = base::after(0);
+			
+			auto ep = ConcurrencyHashTable::after(0);
 			return ep 
 				? HashTableIterator<ConcurrencyHashTable>(*this, ep->getKey())
 				: end();
@@ -50,13 +53,23 @@ public:
 
 private:
 	hash_entry* next(const Key& key) {
-		auto lock = visitor.read_lock();
-		return base::next(key);
+		const auto& hash = calc_hash(key);
+		auto lock = visitor.read_lock(hash);
+		return base::next_by_hash(hash);
 	}
 
 	hash_entry* previos(const Key& key) {
-		auto lock = visitor.read_lock();
-		return base::previos(key);
+		const auto& hash = calc_hash(key);
+		auto lock = visitor.read_lock(hash);
+		return base::previos_by_hash(hash);
 	}
-
+	hash_entry* after(size_t h) {
+		for (auto hi = h + 1; hi < getLength(); ++hi) {
+			auto lock = visitor.read_lock(hi);
+			if (auto& e = getTable()[hi]) {
+				return e.get();
+			}
+		}
+		return nullptr;
+	}
 };

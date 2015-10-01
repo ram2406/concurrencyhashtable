@@ -19,6 +19,9 @@ protected:
 	Visitor visitor;
 	static const size_t DefaultCapacity = 1000;
 
+	const size_t& getLength() const { return length; }
+	const std::vector<std::unique_ptr<hash_entry>>& getTable() const { return table; }
+
 	size_t calc_hash(const Key& key) const {
 		return (h(key) % (length-1));
 	}
@@ -35,11 +38,20 @@ protected:
 		return nullptr;
 	}
 	hash_entry* next(const Key& key) {
-		return next(table[calc_hash(key)].get());
+		const auto& hash = calc_hash(key);
+		return next_by_hash(hash);
+	}
+	hash_entry* next_by_hash(size_t hash) {
+		return next(table[hash].get());
 	}
 
 	hash_entry* previos(const Key& key) {
-		return previos(table[calc_hash(key)].get());
+		const auto& hash = calc_hash(key);
+		return previos_by_hash(hash);
+	}
+
+	hash_entry* previos_by_hash(size_t hash) {
+		return previos(table[hash].get());
 	}
 
 public:
@@ -52,8 +64,7 @@ public:
 
 	}
 
-	Value& get(const Key& key)  {
-		auto hash = calc_hash(key);
+	Value& get(const Key& key, size_t hash) {
 		if (auto& entry = table[hash]) {
 			const auto& before_size = entry->size();
 			auto& value = hash_entry::get(entry, key, hash, visitor);
@@ -67,12 +78,16 @@ public:
 		}
 	}
 
-	bool insert(const Key& key, const Value& value) {
+	Value& get(const Key& key)  {
 		auto hash = calc_hash(key);
+		return get(key, hash);
+	}
+
+	bool insert(const Key& key, const Value& value, size_t hash) {
 		auto& entry = table[hash];
-		if(entry) {
+		if (entry) {
 			const auto& inserted = hash_entry::insert(entry, key, value, hash, visitor);
-			if(inserted) {
+			if (inserted) {
 				++current_size;
 			}
 			return inserted;
@@ -82,23 +97,29 @@ public:
 			++current_size;
 			return true;
 		}
+	}
 
+	bool insert(const Key& key, const Value& value) {
+		auto hash = calc_hash(key);
+		return insert(key, value, hash);
 	}     
 
 
 	Value& operator[] (const Key& key) { return get(key); }
 	//const Value& operator[] (const Key& key) const { return get(key); }
-
-	bool erase(const Key& key) {
-		auto hash = calc_hash(key);
+	bool erase(const Key& key, size_t hash) {
 		if (auto& entry = table[hash]) {
 			const auto& removed = hash_entry::erase(entry, key, hash, visitor);
-			if( removed ) {
+			if (removed) {
 				--current_size;
 			}
 			return removed;
 		}
 		return false;
+	}
+	bool erase(const Key& key) {
+		auto hash = calc_hash(key);
+		return erase(key, hash);
 	}
 	size_t size() const { return current_size; }
 

@@ -8,6 +8,7 @@
 
 #include <Windows.h>
 #include <exception>
+//#include <iostream>
 #include <chrono>
 #include <assert.h>
 
@@ -98,6 +99,7 @@ namespace sm {
 
 		~shared_mutex()
 		{
+			//std::cout << " close handles" << std::endl;
 			CloseHandle(upgrade_sem);
 			CloseHandle(semaphores[unlock_sem]);
 			CloseHandle(semaphores[exclusive_sem]);

@@ -13,7 +13,7 @@
 #endif
 
 namespace gens {
-	const size_t IterationCount = 1000U;
+	const size_t IterationCount = 100000U;
 	const auto TimePoint = std::chrono::system_clock::now();
 	template <class Key>
 	Key GenerateKey() {
@@ -100,14 +100,17 @@ namespace timer {
 	
 
 	inline
-	void PrintTime(const std::string& text) {
+	double PrintTime(const std::string& text) {
 		auto& TimePoint = getLastTime();
 		const auto timePoint2 = std::chrono::high_resolution_clock::now();
-		auto res = std::chrono::duration_cast<std::chrono::nanoseconds>
-			(timePoint2 - TimePoint).count();
-		if (!res) { return; }
+		auto res =  (
+			std::chrono::duration_cast<std::chrono::nanoseconds>
+			(timePoint2 - TimePoint).count()
+			) * (0.000000001) ;
+		if (!res) { return 0.0; }
 		TimePoint = timePoint2;
-		std::cout << text  << ", time: " << res * (0.000000001) << std::endl;
+		std::cout << text  << ", time: " << res << "s" << std::endl;
+		return res;
 	}
 }
 

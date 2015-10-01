@@ -108,6 +108,7 @@ public:
 		tail->data = new_data;
 		tail->next = std::move(p);
 		tail = new_tail;
+		data_cond.notify_one();
 	}
 
 	void push(std::shared_ptr<T> new_data)
@@ -118,6 +119,7 @@ public:
 		tail->data = new_data;
 		tail->next = std::move(p);
 		tail = new_tail;
+		data_cond.notify_one();
 	}
 	
 };

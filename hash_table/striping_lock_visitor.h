@@ -3,6 +3,11 @@
 
 template<class Key, class Value, size_t Level = 1>
 struct StripingLockVisitor {
+	size_t elementsPerMutex;
+	StripingLockVisitor(size_t tableLength) : elementsPerMutex(tableLength / Level) {
+
+	}
+
 	typedef sm::shared_mutex Mutex;
 	struct lock_read {
 		Mutex &mx;
@@ -21,7 +26,8 @@ struct StripingLockVisitor {
 	std::array<Mutex, Level> mxs;
 
 	Mutex& get_mx(size_t hash) {
-		return mxs[Level / hash];
+		const auto& mxi = hash / elementsPerMutex;
+		return mxs[mxi < Level ? mxi : Level - 1];
 	}
 
 	typedef HashEntry<Key, Value, StripingLockVisitor> hash_entry;

@@ -1,6 +1,11 @@
 
 template<class Key, class Value>
 struct NonlockVisitor {
+
+	NonlockVisitor(size_t tableLenth) {
+
+	}
+
 	typedef HashEntry<Key, Value, NonlockVisitor> hash_entry;
 	template<class EntryPtr>
 	void entry_reset_value (EntryPtr& entry, const Key& key, const Value& value, size_t hash) {

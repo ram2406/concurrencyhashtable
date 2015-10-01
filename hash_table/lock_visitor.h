@@ -4,6 +4,11 @@
 
 template<class Key, class Value, class Mutex>
 struct LockVisitor {
+	size_t tableLength;
+	LockVisitor(size_t tableLength)
+		: tableLength(tableLength) {
+
+	}
 	typedef std::unique_lock<Mutex> lock;
 	Mutex	mx;
 	typedef HashEntry<Key, Value, LockVisitor> hash_entry;

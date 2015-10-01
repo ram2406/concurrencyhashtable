@@ -56,11 +56,11 @@ protected:
 
 public:
 	HashTable()
-		: table(DefaultCapacity), length(DefaultCapacity), current_size(0) {
+		: table(DefaultCapacity), length(DefaultCapacity), current_size(0), visitor(DefaultCapacity) {
 
 	}
 	HashTable(size_t capacity)
-		: table(capacity), length(capacity), current_size(0) {
+		: table(capacity), length(capacity), current_size(0), visitor(capacity) {
 
 	}
 

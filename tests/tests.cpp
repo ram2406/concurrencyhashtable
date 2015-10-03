@@ -115,12 +115,12 @@ TEST_CASE("test of concurrency map parallel") {
 	auto sh_map = std::make_shared<Map>( gens::IterationCount); //not thread_safe, but for test allowed
 	thread_pool().add_task([=]()
 	{
-		std::cout << " start insert " << std::endl;
+		//std::cout << " start insert " << std::endl;
 		gens::InsertData2<Map, Key, Value, gens::IterationCount>(*sh_map);
 	});
 	thread_pool().add_task([=]()
 	{
-		std::cout << " start erase " << std::endl;
+		//std::cout << " start erase " << std::endl;
 		gens::RemoveData2<Map, Key, Value, gens::IterationCount>(*sh_map);
 	});
 	std::this_thread::sleep_for(std::chrono::milliseconds(10));

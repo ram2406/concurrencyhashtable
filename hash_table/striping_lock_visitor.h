@@ -10,14 +10,17 @@ struct StripingLockVisitor {
 
 	typedef sm::shared_mutex Mutex;
 	struct lock_read {
-		Mutex &mx;
-		lock_read(Mutex& mx) : mx(mx) {
-			mx.lock_shared();
+		Mutex *mx;
+		lock_read(Mutex* mx) : mx(mx) {
+			mx->lock_shared();
 		}
 		lock_read(lock_read&& l) : mx(l.mx) {
+			l.mx = nullptr;
 		}
 		~lock_read() {
-			mx.unlock_shared();
+			if (mx) {
+				mx->unlock_shared();
+			}
 		}
 	};
 
@@ -52,6 +55,6 @@ struct StripingLockVisitor {
 		entry = std::move(entry->getNext());
 	}
 	lock_read read_lock(size_t hash) {
-		return lock_read(get_mx(hash));
+		return lock_read(&get_mx(hash));
 	}
 };

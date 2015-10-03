@@ -1,7 +1,6 @@
 #include "thread_pool.h"
 
 template<>
-
 SimpleThreadPool& SimpleThreadPool::instance() {
 	static SimpleThreadPool th_pool;
 	return th_pool;
